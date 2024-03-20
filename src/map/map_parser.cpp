@@ -82,7 +82,7 @@ bool LMMapParser::load_from_path(const char *map_file) {
 	}
 
 	int c;
-	char buf[255];
+	char buf[65535];
 	int buf_head = 0;
 	bool is_quoted = false;
 	while ((c = fgetc(map)) != EOF) {
@@ -126,7 +126,7 @@ void LMMapParser::load_from_godot_file(godot::Ref<godot::FileAccess> f) {
 	valve_uvs = false;
 
 	int c;
-	char buf[255];
+	char buf[65535];
 	int buf_head = 0;
 	bool is_quoted = false;
 	while (!f->eof_reached()) {
