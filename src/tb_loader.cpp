@@ -30,8 +30,8 @@ void TBLoader::_bind_methods()
 
 	ClassDB::bind_method(D_METHOD("set_entity_common", "entity_common"), &TBLoader::set_entity_common);
 	ClassDB::bind_method(D_METHOD("get_entity_common"), &TBLoader::get_entity_common);
-	ClassDB::bind_method(D_METHOD("set_entity_path", "entity_path"), &TBLoader::set_entity_path);
-	ClassDB::bind_method(D_METHOD("get_entity_path"), &TBLoader::get_entity_path);
+	ClassDB::bind_method(D_METHOD("set_entity_paths", "entity_paths"), &TBLoader::set_entity_paths);
+	ClassDB::bind_method(D_METHOD("get_entity_paths"), &TBLoader::get_entity_paths);
 	ClassDB::bind_method(D_METHOD("set_texture_path", "texture_path"), &TBLoader::set_texture_path);
 	ClassDB::bind_method(D_METHOD("get_texture_path"), &TBLoader::get_texture_path);
 
@@ -55,7 +55,7 @@ void TBLoader::_bind_methods()
 
 	ADD_GROUP("Entities", "entity_");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "entity_common", PROPERTY_HINT_NONE, "Common Entities"), "set_entity_common", "get_entity_common");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "entity_path", PROPERTY_HINT_DIR, "Entity Path"), "set_entity_path", "get_entity_path");
+	ADD_PROPERTY(PropertyInfo(Variant::PACKED_STRING_ARRAY, "entity_paths"), "set_entity_paths", "get_entity_paths");
 
 	ADD_GROUP("Textures", "texture_");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "texture_path", PROPERTY_HINT_DIR, "Textures Path"), "set_texture_path", "get_texture_path");
@@ -169,14 +169,14 @@ bool TBLoader::get_entity_common()
 	return m_entity_common;
 }
 
-void TBLoader::set_entity_path(const String& path)
+void TBLoader::set_entity_paths(const PackedStringArray& paths)
 {
-	m_entity_path = path;
+	m_entity_paths = paths;
 }
 
-String TBLoader::get_entity_path()
+PackedStringArray TBLoader::get_entity_paths()
 {
-	return m_entity_path;
+	return m_entity_paths;
 }
 
 void TBLoader::set_texture_path(const String& path)

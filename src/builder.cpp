@@ -138,88 +138,91 @@ void Builder::build_entity(int idx, LMEntity& ent, const String& classname)
 
 void Builder::build_entity_custom(int idx, LMEntity& ent, LMEntityGeometry& geo, const String& classname)
 {
-	// m_loader->m_entity_path => "res://entities/"
-	// "info_player_start" => "info/player/start.tscn", "info/player_start.tscn", "info_player_start.tscn"
-	// "thing" => "thing.tscn"
-
+	// Resolution: split classname at first "_" into subfolder + name,
+	// then for each folder in entity_paths, try folder/subfolder/name/name.tscn
 	auto resource_loader = ResourceLoader::get_singleton();
 
-	auto arr = classname.split("_");
-	for (int i = 0; i < arr.size(); i++) {
-		String path = m_loader->m_entity_path + "/";
-		for (int j = 0; j < arr.size(); j++) {
-			if (j > 0) {
-				if (j <= i) {
-					path = path + "/";
-				} else {
-					path = path + "_";
-				}
-			}
-			path = path + arr[j];
+	String subfolder;
+	String name;
+	int sep = classname.find("_");
+	if (sep >= 0) {
+		subfolder = classname.substr(0, sep);
+		name = classname.substr(sep + 1);
+	} else {
+		subfolder = "";
+		name = classname;
+	}
+
+	for (int i = 0; i < m_loader->m_entity_paths.size(); i++) {
+		String path = m_loader->m_entity_paths[i] + "/";
+		if (!subfolder.is_empty()) {
+			path = path + subfolder + "/";
 		}
-		path = path + ".tscn";
+		path = path + name + "/" + name + ".tscn";
 
-		if (resource_loader->exists(path, "PackedScene")) {
-			Ref<PackedScene> scene = resource_loader->load(path);
-			if (scene == nullptr) {
-				UtilityFunctions::printerr("Resource at path '", path, "' could not be loaded as a PackedScene by the resource loader!");
-				return;
-			}
+		if (!resource_loader->exists(path, "PackedScene")) {
+			continue;
+		}
 
-			auto instance = scene->instantiate();
-			m_loader->add_child(instance);
-			instance->set_owner(m_loader->get_owner());
-
-			if (instance->is_class("Node3D")) {
-				set_entity_node_common((Node3D*)instance, ent);
-				if (ent.brush_count > 0) {
-					set_entity_brush_common(idx, (Node3D*)instance, ent);
-				}
-			}
-
-			for (int j = 0; j < ent.property_count; j++) {
-				auto& prop = ent.properties[j];
-
-				auto var = instance->get(prop.key);
-				switch (var.get_type()) {
-					case Variant::BOOL: instance->set(prop.key, atoi(prop.value) == 1); break;
-					case Variant::INT: instance->set(prop.key, (int64_t)atoll(prop.value)); break;
-					case Variant::FLOAT: instance->set(prop.key, atof(prop.value)); break; //TODO: Locale?
-					case Variant::STRING: instance->set(prop.key, prop.value); break;
-
-					case Variant::STRING_NAME: instance->set(prop.key, StringName(prop.value));
-					case Variant::NODE_PATH: instance->set(prop.key, NodePath(prop.value)); //TODO: More TrenchBroom focused node path conversion?
-
-					case Variant::VECTOR2: {
-						vec2 v = vec2_parse(prop.value);
-						instance->set(prop.key, Vector2(v.x, v.y));
-						break;
-					}
-					case Variant::VECTOR2I: {
-						vec2 v = vec2_parse(prop.value);
-						instance->set(prop.key, Vector2i((int)v.x, (int)v.y));
-						break;
-					}
-					case Variant::VECTOR3: {
-						vec3 v = vec3_parse(prop.value);
-						instance->set(prop.key, Vector3(v.x, v.y, v.z));
-						break;
-					}
-					case Variant::VECTOR3I: {
-						vec3 v = vec3_parse(prop.value);
-						instance->set(prop.key, Vector3i((int)v.x, (int)v.y, (int)v.z));
-						break;
-					}
-
-					case Variant::COLOR: {
-						vec3 v = vec3_parse(prop.value);
-						instance->set(prop.key, Color(v.x / 255.0f, v.y / 255.0f, v.z / 255.0f));
-						break;
-					}
-				}
-			}
+		Ref<PackedScene> scene = resource_loader->load(path);
+		if (scene == nullptr) {
+			UtilityFunctions::printerr("Resource at path '", path, "' could not be loaded as a PackedScene by the resource loader!");
 			return;
 		}
+
+		auto instance = scene->instantiate();
+		m_loader->add_child(instance);
+		instance->set_owner(m_loader->get_owner());
+
+		if (instance->is_class("Node3D")) {
+			set_entity_node_common((Node3D*)instance, ent);
+			if (ent.brush_count > 0) {
+				set_entity_brush_common(idx, (Node3D*)instance, ent);
+			}
+		}
+
+		for (int j = 0; j < ent.property_count; j++) {
+			auto& prop = ent.properties[j];
+
+			auto var = instance->get(prop.key);
+			switch (var.get_type()) {
+				case Variant::BOOL: instance->set(prop.key, atoi(prop.value) == 1); break;
+				case Variant::INT: instance->set(prop.key, (int64_t)atoll(prop.value)); break;
+				case Variant::FLOAT: instance->set(prop.key, atof(prop.value)); break;
+				case Variant::STRING: instance->set(prop.key, prop.value); break;
+
+				case Variant::STRING_NAME: instance->set(prop.key, StringName(prop.value));
+				case Variant::NODE_PATH: instance->set(prop.key, NodePath(prop.value));
+
+				case Variant::VECTOR2: {
+					vec2 v = vec2_parse(prop.value);
+					instance->set(prop.key, Vector2(v.x, v.y));
+					break;
+				}
+				case Variant::VECTOR2I: {
+					vec2 v = vec2_parse(prop.value);
+					instance->set(prop.key, Vector2i((int)v.x, (int)v.y));
+					break;
+				}
+				case Variant::VECTOR3: {
+					vec3 v = vec3_parse(prop.value);
+					instance->set(prop.key, Vector3(v.x, v.y, v.z));
+					break;
+				}
+				case Variant::VECTOR3I: {
+					vec3 v = vec3_parse(prop.value);
+					instance->set(prop.key, Vector3i((int)v.x, (int)v.y, (int)v.z));
+					break;
+				}
+
+				case Variant::COLOR: {
+					vec3 v = vec3_parse(prop.value);
+					instance->set(prop.key, Color(v.x / 255.0f, v.y / 255.0f, v.z / 255.0f));
+					break;
+				}
+			}
+		}
+		return;
 	}
 
 	UtilityFunctions::printerr("Path to entity resource could not be resolved: ", classname);

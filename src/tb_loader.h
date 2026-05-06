@@ -25,7 +25,7 @@ public:
 	bool m_filter_nearest = false;
 
 	bool m_entity_common = true;
-	String m_entity_path = "res://entities";
+	PackedStringArray m_entity_paths;
 	String m_texture_path = "res://textures";
 	String m_clip_texture_name = "";
 	String m_skip_texture_name = "";
@@ -65,8 +65,8 @@ public:
 	// Entities
 	void set_entity_common(bool enabled);
 	bool get_entity_common();
-	void set_entity_path(const String& path);
-	String get_entity_path();
+	void set_entity_paths(const PackedStringArray& paths);
+	PackedStringArray get_entity_paths();
 	void set_texture_path(const String& path);
 	String get_texture_path();
 
